@@ -1,0 +1,537 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>โครงการเงินฝาก - สหกรณ์ออมทรัพย์ บวท.</title>
+<style>
+  :root{
+    --blue:#1565c0; --blue-d:#0d47a1; --blue-l:#e3f2fd; --blue-ll:#f5f9ff;
+    --green:#2e7d32; --orange:#ef6c00; --red:#c62828; --gray:#64748b;
+    --line:#e2e8f0; --bg:#f0f4f8; --card:#ffffff; --txt:#1e293b;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{
+    font-family:'Segoe UI',Tahoma,'Sarabun',sans-serif;
+    background:var(--bg); color:var(--txt); line-height:1.5;
+  }
+  header{
+    background:linear-gradient(135deg,var(--blue-d),var(--blue));
+    color:#fff; padding:26px 20px 22px; text-align:center;
+    box-shadow:0 2px 12px rgba(13,71,161,.25);
+  }
+  header h1{font-size:26px;font-weight:700;margin-bottom:4px}
+  header p{opacity:.9;font-size:14px}
+  .wrap{max-width:1240px;margin:0 auto;padding:20px}
+
+  /* layout */
+  .layout{display:grid;grid-template-columns:280px 1fr;gap:20px;align-items:start}
+  @media(max-width:880px){.layout{grid-template-columns:1fr}}
+
+  /* filter panel */
+  .panel{
+    background:var(--card);border-radius:14px;padding:18px;
+    box-shadow:0 1px 6px rgba(0,0,0,.06);position:sticky;top:14px;
+  }
+  .panel h2{font-size:16px;color:var(--blue-d);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+  .fgroup{margin-bottom:18px;border-bottom:1px solid var(--line);padding-bottom:16px}
+  .fgroup:last-child{border:none;margin-bottom:0;padding-bottom:0}
+  .fgroup label.t{font-size:13px;font-weight:600;color:var(--gray);display:block;margin-bottom:8px;text-transform:none}
+  .val{font-weight:700;color:var(--blue)}
+  input[type=range]{width:100%;accent-color:var(--blue);cursor:pointer}
+  input[type=number]{
+    width:100%;padding:8px 10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;
+  }
+  input[type=number]:focus{outline:none;border-color:var(--blue)}
+  .chk{display:flex;align-items:center;gap:8px;font-size:13.5px;margin-bottom:8px;cursor:pointer;padding:4px;border-radius:6px}
+  .chk:hover{background:var(--blue-ll)}
+  .chk input{width:16px;height:16px;accent-color:var(--blue);cursor:pointer}
+  .term-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .term-grid .chk{margin:0;justify-content:center;border:1px solid var(--line);font-size:12px}
+  .term-grid .chk:has(input:checked){background:var(--blue-l);border-color:var(--blue)}
+  .reset{
+    width:100%;padding:9px;background:var(--blue-ll);color:var(--blue);border:1px solid var(--blue-l);
+    border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:inherit;margin-top:4px;
+  }
+  .reset:hover{background:var(--blue-l)}
+
+  /* results */
+  .count{font-size:14px;color:var(--gray);margin-bottom:14px}
+  .count b{color:var(--blue-d)}
+  .sort{float:right;font-size:13px;font-family:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:6px}
+  .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+  .card{
+    background:var(--card);border-radius:14px;overflow:hidden;
+    box-shadow:0 1px 6px rgba(0,0,0,.07);border:1px solid var(--line);
+    display:flex;flex-direction:column;transition:transform .15s,box-shadow .15s;
+  }
+  .card:hover{transform:translateY(-3px);box-shadow:0 8px 22px rgba(13,71,161,.13)}
+  .card .top{padding:16px 16px 12px;background:linear-gradient(135deg,var(--blue-ll),#fff);border-bottom:1px solid var(--line)}
+  .card .name{font-size:17px;font-weight:700;color:var(--blue-d);margin-bottom:8px}
+  .rate{display:flex;align-items:baseline;gap:4px}
+  .rate .num{font-size:30px;font-weight:800;color:var(--orange);line-height:1}
+  .rate .pc{font-size:16px;font-weight:700;color:var(--orange)}
+  .rate .lbl{font-size:12px;color:var(--gray);margin-left:auto;text-align:right}
+  .body{padding:14px 16px;flex:1}
+  .tiers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+  .tier{background:var(--blue-l);color:var(--blue-d);font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px}
+  ul.feat{list-style:none;font-size:13px}
+  ul.feat li{padding:4px 0 4px 22px;position:relative;color:#334155}
+  ul.feat li::before{content:"•";position:absolute;left:6px;color:var(--blue);font-weight:700}
+  .info{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;padding-top:12px;border-top:1px dashed var(--line)}
+  .pill{font-size:11.5px;padding:3px 9px;border-radius:6px;font-weight:600}
+  .pill.ok{background:#e8f5e9;color:var(--green)}
+  .pill.no{background:#ffebee;color:var(--red)}
+  .pill.tax{background:#fff3e0;color:var(--orange)}
+  .pill.min{background:#eef2ff;color:#4338ca}
+  .actions{display:flex;gap:8px;padding:0 16px 14px}
+  .btn{
+    flex:1;text-align:center;padding:9px 8px;border-radius:8px;font-size:13px;font-weight:600;
+    cursor:pointer;font-family:inherit;border:1px solid transparent;text-decoration:none;transition:.15s;
+  }
+  .btn.calc{background:var(--blue);color:#fff}
+  .btn.calc:hover{background:var(--blue-d)}
+  .btn.pdf{background:#fff;color:var(--blue);border-color:var(--blue-l)}
+  .btn.pdf:hover{background:var(--blue-ll)}
+
+  /* modal */
+  .overlay{
+    position:fixed;inset:0;background:rgba(15,23,42,.55);display:none;
+    align-items:center;justify-content:center;padding:16px;z-index:50;
+  }
+  .overlay.show{display:flex}
+  .modal{
+    background:#fff;border-radius:16px;max-width:430px;width:100%;
+    box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;animation:pop .18s ease;
+  }
+  @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
+  .modal .mhead{background:linear-gradient(135deg,var(--blue-d),var(--blue));color:#fff;padding:16px 18px;position:relative}
+  .modal .mhead h3{font-size:16px;padding-right:24px}
+  .modal .mhead small{opacity:.85;font-size:12px}
+  .modal .x{position:absolute;top:12px;right:14px;cursor:pointer;font-size:22px;line-height:1;opacity:.9}
+  .modal .mbody{padding:18px}
+  .frow{margin-bottom:14px}
+  .frow label{font-size:13px;font-weight:600;color:var(--gray);display:block;margin-bottom:6px}
+  .frow input,.frow select{
+    width:100%;padding:10px;border:1px solid var(--line);border-radius:8px;font-size:14px;font-family:inherit;
+  }
+  .frow input:focus,.frow select:focus{outline:none;border-color:var(--blue)}
+  .result{background:var(--blue-ll);border:1px solid var(--blue-l);border-radius:10px;padding:14px;margin-top:6px}
+  .rline{display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0;color:#334155}
+  .rline.big{font-size:17px;font-weight:800;color:var(--blue-d);border-top:1px solid var(--blue-l);margin-top:6px;padding-top:10px}
+  .rline .v{font-weight:700}
+  .rnote{font-size:11.5px;color:var(--gray);margin-top:10px;line-height:1.5}
+  .empty{text-align:center;padding:60px 20px;color:var(--gray);background:var(--card);border-radius:14px}
+  .empty .ic{font-size:40px;margin-bottom:10px}
+  footer{text-align:center;padding:24px;color:var(--gray);font-size:12.5px}
+</style>
+</head>
+<body>
+<header>
+  <h1>🏦 โครงการเงินฝาก</h1>
+  <p>สหกรณ์ออมทรัพย์บริษัทวิทยุการบินแห่งประเทศไทย จำกัด</p>
+</header>
+
+<div class="wrap">
+<div class="layout">
+
+  <!-- ===== FILTER PANEL ===== -->
+  <aside class="panel">
+    <h2>🔍 ตัวกรอง</h2>
+
+    <div class="fgroup">
+      <label class="t">อัตราดอกเบี้ยขั้นต่ำ: <span class="val" id="rateVal">0.00%</span></label>
+      <input type="range" id="rate" min="0" max="3" step="0.05" value="0">
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-top:2px">
+        <span>0%</span><span>3%</span>
+      </div>
+    </div>
+
+    <div class="fgroup">
+      <label class="t">จำนวนเงินที่ต้องการฝาก (บาท)</label>
+      <input type="number" id="amount" placeholder="เช่น 50000" min="0" step="1000">
+      <div style="font-size:11px;color:var(--gray);margin-top:6px">แสดงเฉพาะโครงการที่รับฝากจำนวนนี้ได้</div>
+    </div>
+
+    <div class="fgroup">
+      <label class="t">ระยะเวลาฝาก (เดือน)</label>
+      <div class="term-grid" id="terms">
+        <label class="chk"><input type="checkbox" value="0">ไม่กำหนด</label>
+        <label class="chk"><input type="checkbox" value="3">3</label>
+        <label class="chk"><input type="checkbox" value="5">5</label>
+        <label class="chk"><input type="checkbox" value="6">6</label>
+        <label class="chk"><input type="checkbox" value="9">9</label>
+        <label class="chk"><input type="checkbox" value="10">10</label>
+        <label class="chk"><input type="checkbox" value="12">12</label>
+        <label class="chk"><input type="checkbox" value="15">15</label>
+        <label class="chk"><input type="checkbox" value="18">18</label>
+        <label class="chk"><input type="checkbox" value="20">20</label>
+        <label class="chk"><input type="checkbox" value="24">24</label>
+      </div>
+    </div>
+
+    <div class="fgroup">
+      <label class="t">คุณสมบัติที่ต้องการ</label>
+      <label class="chk"><input type="checkbox" id="f_notax">ไม่เสียภาษีดอกเบี้ย</label>
+      <label class="chk"><input type="checkbox" id="f_mobile">ฝาก/ถอนผ่าน Mobile App</label>
+      <label class="chk"><input type="checkbox" id="f_anytime">ถอนได้ตลอดเวลา</label>
+      <label class="chk"><input type="checkbox" id="f_assoc">สมาชิกสมทบฝากได้</label>
+    </div>
+
+    <button class="reset" id="reset">ล้างตัวกรองทั้งหมด</button>
+  </aside>
+
+  <!-- ===== RESULTS ===== -->
+  <main>
+    <div class="count">
+      <select class="sort" id="sort">
+        <option value="rate">เรียง: ดอกเบี้ยสูงสุด</option>
+        <option value="min">เรียง: เงินฝากขั้นต่ำน้อยสุด</option>
+        <option value="name">เรียง: ชื่อโครงการ</option>
+      </select>
+      พบ <b id="num">0</b> โครงการ
+    </div>
+    <div class="cards" id="cards"></div>
+  </main>
+
+</div>
+</div>
+
+<!-- ===== CALCULATOR MODAL ===== -->
+<div class="overlay" id="overlay">
+  <div class="modal">
+    <div class="mhead">
+      <span class="x" id="mClose">&times;</span>
+      <h3 id="mName">คำนวณดอกเบี้ย</h3>
+      <small id="mSub"></small>
+    </div>
+    <div class="mbody">
+      <div class="frow" id="rowTerm">
+        <label id="lblTerm">เลือกระยะเวลา / อัตราดอกเบี้ย</label>
+        <select id="mTerm"></select>
+      </div>
+      <div class="frow">
+        <label id="lblAmt">จำนวนเงินฝาก (บาท)</label>
+        <input type="number" id="mAmt" placeholder="0" min="0" step="1000">
+      </div>
+      <div id="mResult"></div>
+    </div>
+  </div>
+</div>
+
+<footer>ข้อมูลจากเอกสารโครงการเงินฝาก • อัตราดอกเบี้ยและเงื่อนไขอาจเปลี่ยนแปลงได้ โปรดตรวจสอบกับสหกรณ์อีกครั้ง</footer>
+
+<script>
+/* ====== DATA ====== */
+const DATA = [
+  {
+    name:"เงินฝากออมทรัพย์",
+    rateMin:0.50, rateMax:0.50, terms:[0],
+    minDeposit:10, maxDeposit:null,
+    tax:false, mobile:true, anytime:true, assoc:true,
+    tiers:[], pdf:"ออมทรัพย์.pdf.pdf",
+    calcType:"savings", taxRate:0, rates:[{m:0,r:0.50}],
+    feat:[
+      "เปิดบัญชีได้มากกว่า 1 เล่ม",
+      "ไม่มีขั้นต่ำในการฝาก ถอนได้ตลอดเวลา (คงเหลือขั้นต่ำ 10 บาท)",
+      "ฝาก/ถอนผ่าน Mobile Application ได้",
+      "สมาชิกสมทบฝากได้"
+    ]
+  },
+  {
+    name:"เงินฝากออมทรัพย์พิเศษ",
+    rateMin:0.75, rateMax:0.75, terms:[0],
+    minDeposit:1000, maxDeposit:null,
+    tax:false, mobile:true, anytime:false, assoc:true,
+    tiers:[], pdf:"ออมทรัพย์พิเศษ.pdf.pdf",
+    calcType:"savings", taxRate:0, rates:[{m:0,r:0.75}],
+    feat:[
+      "เปิดบัญชีได้คนละ 1 เล่ม • เปิดบัญชีขั้นต่ำ 1,000 บาท",
+      "ต้องมีเงินคงเหลือขั้นต่ำ 10,000 บาทจึงได้รับดอกเบี้ย",
+      "ถอนได้เดือนละ 1 ครั้ง เกินคิดค่าธรรมเนียม 1% (ขั้นต่ำ 500 บาท)",
+      "ฝาก/ถอนผ่าน Mobile Application ได้ • สมาชิกสมทบฝากได้"
+    ]
+  },
+  {
+    name:"เงินฝากออมทรัพย์สะสมทรัพย์",
+    rateMin:1.75, rateMax:1.75, terms:[0],
+    minDeposit:100, maxDeposit:null,
+    tax:false, mobile:true, anytime:true, assoc:false,
+    tiers:[], pdf:"ออมทรัพย์สะสมทรัพย์.pdf.pdf",
+    calcType:"savings", taxRate:0, rates:[{m:0,r:1.75}],
+    feat:[
+      "เปิดบัญชีได้คนละ 1 เล่ม",
+      "ฝากโดยหักเงินเดือนเท่านั้น • ขั้นต่ำ 100 บาท (คงเหลือขั้นต่ำ 10 บาท)",
+      "ถอนได้ตลอดเวลา (ถอนผ่าน Mobile App ได้)",
+      "เปลี่ยนแปลงการฝากได้ปีละ 1 ครั้ง • สมาชิกสมทบฝากไม่ได้"
+    ]
+  },
+  {
+    name:"เงินฝากประจำ – จ่ายดอกเบี้ยรายเดือน (6, 12 เดือน)",
+    rateMin:1.75, rateMax:2.00, terms:[6,12],
+    minDeposit:100000, maxDeposit:null,
+    tax:true, mobile:false, anytime:false, assoc:true,
+    tiers:["6 เดือน","12 เดือน"], pdf:"ประจำ.pdf.pdf",
+    calcType:"fixed", taxRate:15, rates:[{m:6,r:1.75},{m:12,r:2.00}],
+    feat:[
+      "เปิดบัญชีได้มากกว่า 1 เล่ม",
+      "ฝากขั้นต่ำ 100,000 บาท คงเงินต้นตามระยะเวลาที่กำหนด",
+      "เสียภาษีดอกเบี้ย 15% • ถอนผ่าน Mobile App ไม่ได้",
+      "สมาชิกสมทบฝากได้"
+    ]
+  },
+  {
+    name:"เงินฝากประจำ – ดอกเบี้ยทบต้น (6, 12 เดือน)",
+    rateMin:1.75, rateMax:2.00, terms:[6,12],
+    minDeposit:100, maxDeposit:null,
+    tax:true, mobile:false, anytime:false, assoc:true,
+    tiers:["6 เดือน","12 เดือน"], pdf:"ประจำ.pdf.pdf",
+    calcType:"compound", taxRate:15, rates:[{m:6,r:1.75},{m:12,r:2.00}],
+    feat:[
+      "เปิดบัญชีได้มากกว่า 1 เล่ม • ฝากขั้นต่ำ 100 บาท",
+      "ครบกำหนดนำดอกเบี้ยทบเป็นเงินต้นใหม่",
+      "เสียภาษีดอกเบี้ย 15% • ถอนผ่าน Mobile App ไม่ได้",
+      "สมาชิกสมทบฝากได้"
+    ]
+  },
+  {
+    name:"เงินฝากประจำ – จ่ายดอกเบี้ยรายปี (24 เดือน)",
+    rateMin:2.40, rateMax:2.40, terms:[24],
+    minDeposit:10000, maxDeposit:null,
+    tax:true, mobile:false, anytime:false, assoc:true,
+    tiers:["24 เดือน"], pdf:"ประจำ.pdf.pdf",
+    calcType:"fixed", taxRate:15, rates:[{m:24,r:2.40}],
+    feat:[
+      "เปิดบัญชีได้มากกว่า 1 เล่ม",
+      "ฝากขั้นต่ำ 10,000 บาท คงเงินต้นตามระยะเวลาที่กำหนด",
+      "เสียภาษีดอกเบี้ย 15% • ถอนผ่าน Mobile App ไม่ได้",
+      "สมาชิกสมทบฝากได้"
+    ]
+  },
+  {
+    name:"เงินฝากทวีทรัพย์",
+    rateMin:2.65, rateMax:2.65, terms:[24],
+    minDeposit:500, maxDeposit:25000,
+    tax:false, mobile:false, anytime:false, assoc:false,
+    tiers:["24 เดือน (รายเดือน)"], pdf:"ทวีทรัพย์.pdf.pdf",
+    calcType:"recurring", taxRate:0, rates:[{m:24,r:2.65}],
+    feat:[
+      "เปิดบัญชีได้คนละ 1 เล่ม • ฝากเท่ากันทุกเดือน 24 เดือนติดต่อกัน",
+      "ฝากขั้นต่ำ 500 บาท สูงสุดไม่เกิน 25,000 บาท/เดือน",
+      "หักเงินเดือน หรือนำฝากเองไม่เกินวันที่ 5 ของเดือน",
+      "ถอนก่อน 3 เดือนไม่ได้ดอกเบี้ย • เกิน 3 เดือนได้อัตราออมทรัพย์",
+      "ถอนผ่าน Mobile App ไม่ได้ • สมาชิกสมทบฝากไม่ได้"
+    ]
+  },
+  {
+    name:"ออมทรัพย์กำหนดระยะเวลา (3–24 เดือน)",
+    rateMin:1.35, rateMax:2.25, terms:[3,6,9,12,18,24],
+    minDeposit:10000, maxDeposit:null,
+    tax:false, mobile:false, anytime:false, assoc:true,
+    tiers:["3ด.1.35%","6ด.1.65%","9ด.1.80%","12ด.1.95%","18ด.2.10%","24ด.2.25%"],
+    pdf:"ออมทรัพย์กำหนดระยะเวลา 3-24 เดือน.pdf.pdf",
+    calcType:"fixed", taxRate:0,
+    rates:[{m:3,r:1.35},{m:6,r:1.65},{m:9,r:1.80},{m:12,r:1.95},{m:18,r:2.10},{m:24,r:2.25}],
+    feat:[
+      "เปิดบัญชีได้คนละ 1 เล่ม ต่อ 1 ประเภทระยะเวลา",
+      "ฝากขั้นต่ำ 10,000 บาท คงเงินต้นตามระยะเวลา",
+      "ถอนก่อนกำหนดได้รับอัตราดอกเบี้ยออมทรัพย์",
+      "วงเงินรวมทุกประเภทไม่เกิน 20 ล้านบาท (สมทบ 10 ล้าน)",
+      "ถอนผ่าน Mobile App ไม่ได้ • สมาชิกสมทบฝากได้"
+    ]
+  },
+  {
+    name:"ออมทรัพย์กำหนดระยะเวลา (5–20 เดือน) ⏳",
+    rateMin:2.05, rateMax:2.80, terms:[5,10,15,20],
+    minDeposit:10000, maxDeposit:null,
+    tax:false, mobile:false, anytime:false, assoc:true,
+    tiers:["5ด.2.05%","10ด.2.35%","15ด.2.55%","20ด.2.80%"],
+    pdf:"ออมทรัพย์กำหนดระยะเวลา 5-20 เดือน.pdf.pdf",
+    calcType:"fixed", taxRate:0,
+    rates:[{m:5,r:2.05},{m:10,r:2.35},{m:15,r:2.55},{m:20,r:2.80}],
+    feat:[
+      "เปิดบัญชีได้คนละ 1 เล่ม ต่อ 1 ประเภทระยะเวลา",
+      "ฝากขั้นต่ำ 10,000 บาท คงเงินต้นตามระยะเวลา",
+      "ไม่จำกัดวงเงินสำหรับสมาชิกสามัญ (สมทบไม่เกิน 20 ล้าน)",
+      "ถอนก่อนกำหนดได้รับอัตราดอกเบี้ยออมทรัพย์",
+      "ถอนผ่าน Mobile App ไม่ได้ • โครงการสิ้นสุด 30 มิ.ย. 2569"
+    ]
+  }
+];
+
+/* ====== ELEMENTS ====== */
+const $=id=>document.getElementById(id);
+const fmt=n=>n.toLocaleString('th-TH');
+const baht=n=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
+DATA.forEach((d,i)=>d._i=i);
+
+/* ====== RENDER ====== */
+function card(d){
+  const tiers = d.tiers.length
+    ? `<div class="tiers">${d.tiers.map(t=>`<span class="tier">${t}</span>`).join('')}</div>` : '';
+  const maxTxt = d.maxDeposit ? ` – ${fmt(d.maxDeposit)}` : '';
+  const rateLbl = d.rateMin===d.rateMax ? 'ต่อปี' : `สูงสุด ${d.rateMax.toFixed(2)}% ต่อปี`;
+  const pills = [
+    d.tax ? `<span class="pill tax">เสียภาษี 15%</span>` : `<span class="pill ok">ไม่เสียภาษี</span>`,
+    d.mobile ? `<span class="pill ok">Mobile App</span>` : `<span class="pill no">ไม่มี App</span>`,
+    d.assoc ? `<span class="pill ok">สมทบฝากได้</span>` : `<span class="pill no">สมทบฝากไม่ได้</span>`,
+    `<span class="pill min">ขั้นต่ำ ${fmt(d.minDeposit)}${maxTxt} บ.</span>`
+  ].join('');
+  return `<div class="card">
+    <div class="top">
+      <div class="name">${d.name}</div>
+      <div class="rate">
+        <span class="num">${d.rateMin.toFixed(2)}</span><span class="pc">%</span>
+        <span class="lbl">${rateLbl}</span>
+      </div>
+    </div>
+    <div class="body">
+      ${tiers}
+      <ul class="feat">${d.feat.map(f=>`<li>${f}</li>`).join('')}</ul>
+      <div class="info">${pills}</div>
+    </div>
+    <div class="actions">
+      <button class="btn calc" data-i="${d._i}">🧮 คำนวณดอกเบี้ย</button>
+      <a class="btn pdf" href="${encodeURI(d.pdf)}" target="_blank" rel="noopener">📄 ดู PDF ต้นฉบับ</a>
+    </div>
+  </div>`;
+}
+
+function getFilters(){
+  const terms=[...document.querySelectorAll('#terms input:checked')].map(c=>+c.value);
+  return {
+    rate:+$('rate').value,
+    amount: $('amount').value===''?null:+$('amount').value,
+    terms,
+    notax:$('f_notax').checked,
+    mobile:$('f_mobile').checked,
+    anytime:$('f_anytime').checked,
+    assoc:$('f_assoc').checked
+  };
+}
+
+function apply(){
+  const f=getFilters();
+  $('rateVal').textContent=f.rate.toFixed(2)+'%';
+  let list=DATA.filter(d=>{
+    if(d.rateMax < f.rate) return false;
+    if(f.amount!==null){
+      if(f.amount < d.minDeposit) return false;
+      if(d.maxDeposit!==null && f.amount > d.maxDeposit) return false;
+    }
+    if(f.terms.length && !f.terms.some(t=>d.terms.includes(t))) return false;
+    if(f.notax && d.tax) return false;
+    if(f.mobile && !d.mobile) return false;
+    if(f.anytime && !d.anytime) return false;
+    if(f.assoc && !d.assoc) return false;
+    return true;
+  });
+
+  const s=$('sort').value;
+  list.sort((a,b)=>{
+    if(s==='rate') return b.rateMax-a.rateMax;
+    if(s==='min') return a.minDeposit-b.minDeposit;
+    return a.name.localeCompare(b.name,'th');
+  });
+
+  $('num').textContent=list.length;
+  $('cards').innerHTML = list.length
+    ? list.map(card).join('')
+    : '';
+  if(!list.length){
+    $('cards').outerHTML='<div class="empty" id="cards"><div class="ic">🔎</div>ไม่พบโครงการที่ตรงกับเงื่อนไข<br>ลองปรับตัวกรองใหม่</div>';
+  }
+}
+
+/* ====== CALCULATOR ====== */
+let curProd=null;
+const SAVING_MONTHS=[3,6,12,24,36];
+
+function openCalc(d){
+  curProd=d;
+  $('mName').textContent='🧮 '+d.name;
+  const sel=$('mTerm');
+  if(d.calcType==='recurring'){
+    $('lblTerm').textContent='ระยะเวลาฝาก';
+    sel.innerHTML=`<option value="24|2.65">24 เดือน • 2.65% ต่อปี (ฝากรายเดือน)</option>`;
+    sel.disabled=true;
+    $('lblAmt').textContent='ยอดฝากต่อเดือน (บาท)';
+    $('mSub').textContent='ฝากเท่ากันทุกเดือน 24 เดือน';
+  }else if(d.calcType==='savings'){
+    $('lblTerm').textContent='ระยะเวลาที่ฝาก (เดือน)';
+    sel.disabled=false;
+    sel.innerHTML=SAVING_MONTHS.map(m=>`<option value="${m}|${d.rates[0].r}">${m} เดือน • ${d.rates[0].r.toFixed(2)}% ต่อปี</option>`).join('');
+    $('lblAmt').textContent='จำนวนเงินฝาก (บาท)';
+    $('mSub').textContent='ดอกเบี้ยออมทรัพย์ คำนวณตามจำนวนเดือนที่ฝาก';
+  }else{
+    $('lblTerm').textContent='เลือกระยะเวลา / อัตราดอกเบี้ย';
+    sel.disabled=false;
+    sel.innerHTML=d.rates.map(t=>`<option value="${t.m}|${t.r}">${t.m} เดือน • ${t.r.toFixed(2)}% ต่อปี</option>`).join('');
+    $('lblAmt').textContent='จำนวนเงินฝาก (บาท)';
+    $('mSub').textContent = d.calcType==='compound' ? 'คิดแบบทบต้นรายเดือน' : 'เงินฝากประจำ';
+  }
+  $('mAmt').value = d.minDeposit>1 ? d.minDeposit : 10000;
+  $('overlay').classList.add('show');
+  calc();
+}
+
+function calc(){
+  const d=curProd; if(!d) return;
+  const [m,r]=$('mTerm').value.split('|').map(Number);
+  const amt=+$('mAmt').value||0;
+  let principal, gross;
+
+  if(d.calcType==='recurring'){
+    const n=m; // 24
+    principal=amt*n;                       // เงินต้นรวมที่ฝากทั้งหมด
+    gross=amt*(r/100/12)*(n*(n+1)/2);      // ดอกเบี้ยสะสมแบบฝากรายเดือน
+  }else if(d.calcType==='compound'){
+    principal=amt;
+    gross=amt*Math.pow(1+r/100/12,m)-amt;  // ทบต้นรายเดือน
+  }else{
+    principal=amt;
+    gross=amt*(r/100)*(m/12);              // ดอกเบี้ยแบบปกติ
+  }
+
+  const taxAmt=gross*(d.taxRate/100);
+  const net=gross-taxAmt;
+  const total=principal+net;
+
+  const depLabel=d.calcType==='recurring'?'เงินต้นรวมที่ฝาก':'เงินต้น';
+  let html=`<div class="result">
+    <div class="rline"><span>${depLabel}</span><span class="v">${baht(principal)} บ.</span></div>
+    <div class="rline"><span>ดอกเบี้ยที่ได้ (ก่อนภาษี)</span><span class="v" style="color:var(--orange)">${baht(gross)} บ.</span></div>`;
+  if(d.taxRate>0){
+    html+=`<div class="rline"><span>หักภาษี ${d.taxRate}%</span><span class="v" style="color:var(--red)">- ${baht(taxAmt)} บ.</span></div>
+    <div class="rline"><span>ดอกเบี้ยสุทธิ</span><span class="v" style="color:var(--green)">${baht(net)} บ.</span></div>`;
+  }
+  html+=`<div class="rline big"><span>รวมเงินที่ได้รับ</span><span>${baht(total)} บ.</span></div>
+  </div>
+  <div class="rnote">* เป็นการประมาณการเบื้องต้น (${d.taxRate>0?'หักภาษี '+d.taxRate+'% แล้ว':'ไม่หักภาษี'}) ตัวเลขจริงขึ้นกับวิธีคิดดอกเบี้ยและวันที่ฝากจริงของสหกรณ์</div>`;
+  $('mResult').innerHTML=html;
+}
+
+function closeCalc(){$('overlay').classList.remove('show');curProd=null;}
+
+document.addEventListener('click',e=>{
+  const b=e.target.closest('.btn.calc');
+  if(b){openCalc(DATA[+b.dataset.i]);}
+});
+$('mClose').addEventListener('click',closeCalc);
+$('overlay').addEventListener('click',e=>{if(e.target===$('overlay'))closeCalc();});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeCalc();});
+$('mTerm').addEventListener('input',calc);
+$('mAmt').addEventListener('input',calc);
+
+/* ====== EVENTS ====== */
+document.addEventListener('input',e=>{ if(e.target.closest('.modal'))return; apply(); });
+document.addEventListener('change',e=>{ if(e.target.closest('.modal'))return; apply(); });
+$('reset').addEventListener('click',()=>{
+  $('rate').value=0; $('amount').value=''; $('sort').value='rate';
+  document.querySelectorAll('.panel input[type=checkbox]').forEach(c=>c.checked=false);
+  apply();
+});
+apply();
+</script>
+</body>
+</html>
