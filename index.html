@@ -75,6 +75,10 @@
   .rate .num{font-size:30px;font-weight:800;color:var(--orange);line-height:1}
   .rate .pc{font-size:16px;font-weight:700;color:var(--orange)}
   .rate .lbl{font-size:12px;color:var(--gray);margin-left:auto;text-align:right}
+  .period{
+    display:inline-block;margin-top:10px;font-size:12px;font-weight:600;
+    color:#8a5a00;background:#fff8e1;border:1px solid #ffe7a3;padding:3px 9px;border-radius:6px;
+  }
   .body{padding:14px 16px;flex:1}
   .tiers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
   .tier{background:var(--blue-l);color:var(--blue-d);font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px}
@@ -87,6 +91,7 @@
   .pill.no{background:#ffebee;color:var(--red)}
   .pill.tax{background:#fff3e0;color:var(--orange)}
   .pill.min{background:#eef2ff;color:#4338ca}
+  .pill.who{background:#f3e8ff;color:#6b21a8}
   .actions{display:flex;gap:8px;padding:0 16px 14px}
   .btn{
     flex:1;text-align:center;padding:9px 8px;border-radius:8px;font-size:13px;font-weight:600;
@@ -106,13 +111,14 @@
   .modal{
     background:#fff;border-radius:16px;max-width:430px;width:100%;
     box-shadow:0 20px 60px rgba(0,0,0,.3);overflow:hidden;animation:pop .18s ease;
+    max-height:calc(100vh - 32px);max-height:calc(100dvh - 32px);display:flex;flex-direction:column;
   }
   @keyframes pop{from{transform:scale(.94);opacity:0}to{transform:scale(1);opacity:1}}
   .modal .mhead{background:linear-gradient(135deg,var(--blue-d),var(--blue));color:#fff;padding:16px 18px;position:relative}
   .modal .mhead h3{font-size:16px;padding-right:24px}
   .modal .mhead small{opacity:.85;font-size:12px}
   .modal .x{position:absolute;top:12px;right:14px;cursor:pointer;font-size:22px;line-height:1;opacity:.9}
-  .modal .mbody{padding:18px}
+  .modal .mbody{padding:18px;overflow-y:auto}
   .frow{margin-bottom:14px}
   .frow label{font-size:13px;font-weight:600;color:var(--gray);display:block;margin-bottom:6px}
   .frow input,.frow select{
@@ -120,9 +126,11 @@
   }
   .frow input:focus,.frow select:focus{outline:none;border-color:var(--blue)}
   .result{background:var(--blue-ll);border:1px solid var(--blue-l);border-radius:10px;padding:14px;margin-top:6px}
-  .rline{display:flex;justify-content:space-between;font-size:13.5px;padding:4px 0;color:#334155}
+  .rline{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:4px 0;color:#334155}
   .rline.big{font-size:17px;font-weight:800;color:var(--blue-d);border-top:1px solid var(--blue-l);margin-top:6px;padding-top:10px}
-  .rline .v{font-weight:700}
+  .rline .v{font-weight:700;white-space:nowrap}
+  .rline small{display:block;font-size:11.5px;color:var(--gray)}
+  .rwarn{background:#fff8e1;border:1px solid #ffe7a3;color:#8a5a00;border-radius:8px;padding:8px 10px;font-size:12.5px;margin-bottom:8px}
   .rnote{font-size:11.5px;color:var(--gray);margin-top:10px;line-height:1.5}
   .empty{text-align:center;padding:60px 20px;color:var(--gray);background:var(--card);border-radius:14px}
   .empty .ic{font-size:40px;margin-bottom:10px}
@@ -146,7 +154,7 @@
       <label class="t">อัตราดอกเบี้ยขั้นต่ำ: <span class="val" id="rateVal">0.00%</span></label>
       <input type="range" id="rate" min="0" max="3" step="0.05" value="0">
       <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--gray);margin-top:2px">
-        <span>0%</span><span>3%</span>
+        <span>0%</span><span id="rateMax">3%</span>
       </div>
     </div>
 
@@ -158,19 +166,7 @@
 
     <div class="fgroup">
       <label class="t">ระยะเวลาฝาก (เดือน)</label>
-      <div class="term-grid" id="terms">
-        <label class="chk"><input type="checkbox" value="0">ไม่กำหนด</label>
-        <label class="chk"><input type="checkbox" value="3">3</label>
-        <label class="chk"><input type="checkbox" value="5">5</label>
-        <label class="chk"><input type="checkbox" value="6">6</label>
-        <label class="chk"><input type="checkbox" value="9">9</label>
-        <label class="chk"><input type="checkbox" value="10">10</label>
-        <label class="chk"><input type="checkbox" value="12">12</label>
-        <label class="chk"><input type="checkbox" value="15">15</label>
-        <label class="chk"><input type="checkbox" value="18">18</label>
-        <label class="chk"><input type="checkbox" value="20">20</label>
-        <label class="chk"><input type="checkbox" value="24">24</label>
-      </div>
+      <div class="term-grid" id="terms"></div>
     </div>
 
     <div class="fgroup">
@@ -179,6 +175,7 @@
       <label class="chk"><input type="checkbox" id="f_mobile">ฝาก/ถอนผ่าน Mobile App</label>
       <label class="chk"><input type="checkbox" id="f_anytime">ถอนได้ตลอดเวลา</label>
       <label class="chk"><input type="checkbox" id="f_assoc">สมาชิกสมทบฝากได้</label>
+      <label class="chk"><input type="checkbox" id="f_general">สมาชิกทั่วไปฝากได้ (ไม่จำกัดกลุ่ม)</label>
     </div>
 
     <button class="reset" id="reset">ล้างตัวกรองทั้งหมด</button>
@@ -244,7 +241,7 @@ const DATA = [
   {
     name:"เงินฝากออมทรัพย์พิเศษ",
     rateMin:0.75, rateMax:0.75, terms:[0],
-    minDeposit:1000, maxDeposit:null,
+    minDeposit:1000, maxDeposit:null, earnMin:10000,
     tax:false, mobile:true, anytime:false, assoc:true,
     tiers:[], pdf:"ออมทรัพย์พิเศษ.pdf.pdf",
     calcType:"savings", taxRate:0, rates:[{m:0,r:0.75}],
@@ -344,20 +341,84 @@ const DATA = [
     ]
   },
   {
-    name:"ออมทรัพย์กำหนดระยะเวลา (5–20 เดือน) ⏳",
+    name:"ออมทรัพย์กำหนดระยะเวลา (5–20 เดือน)",
     rateMin:2.05, rateMax:2.80, terms:[5,10,15,20],
     minDeposit:10000, maxDeposit:null,
     tax:false, mobile:false, anytime:false, assoc:true,
     tiers:["5ด.2.05%","10ด.2.35%","15ด.2.55%","20ด.2.80%"],
-    pdf:"20_2569 ประกาศ เรื่อง โครงการเงินฝากออมทรัพย์ แบบกำหนดระยะเวลา(ณ วันที่ 1 ก.ค.2569).pdf",
+    period:"1 ต.ค. – 30 ธ.ค. 2569 (ขยายเวลา)",
+    pdf:"23.ประกาศ เรื่อง โครงการเงินฝากออมทรัพย์ แบบกำหนดระยะเวลา(ณ วันที่ 1 ต.ค.2569).pdf",
     calcType:"fixed", taxRate:0,
     rates:[{m:5,r:2.05},{m:10,r:2.35},{m:15,r:2.55},{m:20,r:2.80}],
     feat:[
       "ฝากขั้นต่ำ 10,000 บาท/ระยะเวลา • สมาชิกสามัญไม่จำกัดวงเงิน (สมทบไม่เกิน 20 ล้าน)",
       "คิดดอกเบี้ยรายวัน จ่ายรายเดือน โอนเข้าบัญชีออมทรัพย์/พิเศษ/เพิ่มทรัพย์ หรือ ธ.กรุงไทย",
       "ถอนก่อนกำหนดต้องถอนทั้งจำนวน (ถอนบางส่วนไม่ได้) ได้รับอัตราดอกเบี้ยออมทรัพย์",
-      "ถอนผ่าน Mobile App ไม่ได้",
-      "🗓️ ขยายเวลา: มีผล 1 ก.ค. – 30 ก.ย. 2569"
+      "ถอนผ่าน Mobile App ไม่ได้"
+    ]
+  },
+  {
+    name:"ออมทรัพย์กำหนดระยะเวลา สำหรับนิติบุคคล (5–20 เดือน)",
+    rateMin:2.05, rateMax:2.80, terms:[5,10,15,20],
+    minDeposit:10000, maxDeposit:null,
+    tax:null, mobile:null, anytime:false, assoc:false,   // ประกาศไม่ได้ระบุเรื่องภาษี/Mobile App
+    only:"เฉพาะนิติบุคคล",
+    tiers:["5ด.2.05%","10ด.2.35%","15ด.2.55%","20ด.2.80%"],
+    period:"1 ต.ค. – 30 ธ.ค. 2569",
+    pdf:"24.ประกาศ เรื่อง โครงการเงินฝากออมทรัพย์สำหรับนิติบุคคล แบบกำหนดระยะเวลา(ณ วันที่ 1 ต.ค.2569).pdf",
+    calcType:"fixed", taxRate:0,
+    rates:[{m:5,r:2.05},{m:10,r:2.35},{m:15,r:2.55},{m:20,r:2.80}],
+    feat:[
+      "รับฝากเฉพาะกองทุนสวัสดิการ บวท. และมูลนิธิน่านฟ้าไทย",
+      "ฝากขั้นต่ำ 10,000 บาทขึ้นไป",
+      "คิดดอกเบี้ยรายวัน จ่ายดอกเบี้ยเมื่อครบกำหนด โอนเข้าบัญชีออมทรัพย์ หรือ ธ.กรุงไทย",
+      "ถอนก่อนกำหนดต้องถอนทั้งจำนวน (ถอนบางส่วนไม่ได้) ได้รับอัตราดอกเบี้ยออมทรัพย์"
+    ]
+  },
+  {
+    name:"ออมทรัพย์เกษียณเสริมสุข ปี 2569",
+    rateMin:3.00, rateMax:3.50, terms:[12,24,36,60,84],
+    minDeposit:20000, maxDeposit:15000000, earnMin:20000,
+    tax:false, mobile:null, anytime:false, assoc:false,
+    only:"เฉพาะผู้เกษียณ/พ้นสภาพ ปี 2569",
+    tiers:["12ด. 3.00%","24ด. 3.00→3.25%","36ด. 3.00→3.25→3.50%","60ด. 3.00→3.25→3.50%","84ด. 3.50%"],
+    period:"1 ต.ค. – 30 ธ.ค. 2569",
+    pdf:"28_2569 ประกาศ เรื่อง โครงการรับฝากเงินออมทรัพย์เกษียณเสริมสุข ปี 2569.pdf",
+    calcType:"stepup", taxRate:0, review:36,
+    rates:[
+      {m:12,r:3.00},
+      {m:24,r:3.25,steps:[{to:12,r:3.00},{to:24,r:3.25}]},
+      {m:36,r:3.50,steps:[{to:12,r:3.00},{to:24,r:3.25},{to:36,r:3.50}]},
+      {m:60,r:3.50,steps:[{to:12,r:3.00},{to:24,r:3.25},{to:60,r:3.50}]},
+      {m:84,r:3.50,max:5000000}
+    ],
+    feat:[
+      "สำหรับสมาชิกที่เกษียณอายุในปี 2569 และสมาชิกที่พ้นสภาพการเป็นพนักงาน บวท. ก่อนเกษียณอายุในปี 2569 เท่านั้น",
+      "ดอกเบี้ยขั้นบันได: ช่วง 12 เดือนแรก 3.00% • ช่วง 12–24 เดือน 3.25% • ช่วง 24 เดือนขึ้นไป 3.50% (แบบ 84 เดือนได้ 3.50% ตลอด แต่ฝากได้ไม่เกิน 5 ล้านบาท)",
+      "วงเงินฝากรวมทั้งโครงการไม่เกิน 15 ล้านบาท • ฝากได้เงื่อนไขละ 1 บัญชี แต่ฝากได้หลายยอด",
+      "คิดดอกเบี้ยรายวัน จ่ายรายเดือน โอนเข้าบัญชีออมทรัพย์/พิเศษ/เพิ่มทรัพย์ หรือ ธ.กรุงไทย • ต้องมีเงินในบัญชีขั้นต่ำ 20,000 บาท จึงคิดดอกเบี้ยให้",
+      "ถอนบางส่วนไม่ได้ • ถอนก่อนครบกำหนด: ฝากไม่ครบ 3 เดือนไม่ได้ดอกเบี้ย ตั้งแต่ 3 เดือนได้อัตราออมทรัพย์ (ดอกเบี้ยที่รับไปแล้วถูกหักคืนจากเงินต้น)",
+      "เสียชีวิตก่อนครบกำหนด ไม่เรียกคืนดอกเบี้ยที่จ่ายไปแล้ว • สหกรณ์พิจารณาอัตราดอกเบี้ยทุก 3 ปี"
+    ]
+  },
+  {
+    name:"ออมทรัพย์บำนาญผู้เกษียณ",
+    rateMin:3.25, rateMax:3.25, terms:[120,180],
+    minDeposit:1000000, maxDeposit:null,
+    tax:false, mobile:null, anytime:false, assoc:false,
+    only:"เฉพาะผู้เกษียณ/พ้นสภาพ ปี 2569",
+    tiers:["120 เดือน (10 ปี)","180 เดือน (15 ปี)"],
+    period:"2 พ.ย. – 30 ธ.ค. 2569",
+    pdf:"29.ประกาศ เรื่อง โครงการรับฝากเงินออมทรัพย์บำนาญผู้เกษียณ.pdf",
+    calcType:"annuity", taxRate:0, review:36,
+    rates:[{m:120,r:3.25},{m:180,r:3.25}],
+    feat:[
+      "สำหรับสมาชิกที่เกษียณอายุในปี 2569 และสมาชิกที่พ้นสภาพการเป็นพนักงาน บวท. ก่อนเกษียณอายุในปี 2569 เท่านั้น",
+      "ฝากเป็นแผน แผนละ 1–10 ล้านบาท • เลือกได้ทั้ง 120 และ/หรือ 180 เดือน ระยะเวลาละ 1 บัญชี (บัญชีละหลายแผนและหลายครั้ง)",
+      "สหกรณ์ทยอยจ่ายคืนต้นเงินเท่ากันทุกเดือนพร้อมดอกเบี้ย (คิดรายวันจากเงินฝากคงเหลือ) ทุกวันทำการสุดท้ายของเดือน เริ่ม ธ.ค. 2569",
+      "จ่ายเข้าบัญชีออมทรัพย์/ออมทรัพย์พิเศษ หรือ ธ.กรุงไทย ได้บัญชีเดียว",
+      "ถอนก่อนกำหนดต้องถอนทั้งแผน ดอกเบี้ยที่รับไปแล้วถูกเรียกคืน แล้วคิดให้ใหม่: ฝากไม่ครบ 3 ปีได้อัตราออมทรัพย์ • ช่วงถัดไปได้อัตราออมทรัพย์ +1.00% ถึง +2.00% (ดูตารางใน PDF)",
+      "เสียชีวิตก่อนครบกำหนด ไม่เรียกคืนดอกเบี้ยที่จ่ายไปแล้ว • สหกรณ์พิจารณาอัตราดอกเบี้ยทุก 3 ปี"
     ]
   }
 ];
@@ -368,16 +429,25 @@ const fmt=n=>n.toLocaleString('th-TH');
 const baht=n=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 DATA.forEach((d,i)=>d._i=i);
 
+/* ตัวเลือกระยะเวลาและช่วงดอกเบี้ยของตัวกรอง สร้างจากข้อมูลโครงการ */
+$('terms').innerHTML=[...new Set(DATA.flatMap(d=>d.terms))].sort((a,b)=>a-b)
+  .map(t=>`<label class="chk"><input type="checkbox" value="${t}">${t||'ไม่กำหนด'}</label>`).join('');
+const RATE_MAX=Math.ceil(Math.max(...DATA.map(d=>d.rateMax))*2)/2;
+$('rate').max=RATE_MAX; $('rateMax').textContent=RATE_MAX+'%';
+
 /* ====== RENDER ====== */
 function card(d){
   const tiers = d.tiers.length
     ? `<div class="tiers">${d.tiers.map(t=>`<span class="tier">${t}</span>`).join('')}</div>` : '';
   const maxTxt = d.maxDeposit ? ` – ${fmt(d.maxDeposit)}` : '';
   const rateLbl = d.rateMin===d.rateMax ? 'ต่อปี' : `สูงสุด ${d.rateMax.toFixed(2)}% ต่อปี`;
+  const period = d.period ? `<div class="period">🗓️ เปิดรับฝาก ${d.period}</div>` : '';
+  // tax/mobile เป็น null = ประกาศไม่ได้ระบุ จึงไม่แสดงป้าย
   const pills = [
-    d.tax ? `<span class="pill tax">เสียภาษี 15%</span>` : `<span class="pill ok">ไม่เสียภาษี</span>`,
-    d.mobile ? `<span class="pill ok">Mobile App</span>` : `<span class="pill no">ไม่มี App</span>`,
-    d.assoc ? `<span class="pill ok">สมทบฝากได้</span>` : `<span class="pill no">สมทบฝากไม่ได้</span>`,
+    d.tax===true ? `<span class="pill tax">เสียภาษี 15%</span>` : d.tax===false ? `<span class="pill ok">ไม่เสียภาษี</span>` : '',
+    d.mobile===true ? `<span class="pill ok">Mobile App</span>` : d.mobile===false ? `<span class="pill no">ไม่มี App</span>` : '',
+    d.only ? `<span class="pill who">${d.only}</span>`
+      : d.assoc ? `<span class="pill ok">สมทบฝากได้</span>` : `<span class="pill no">สมทบฝากไม่ได้</span>`,
     `<span class="pill min">ขั้นต่ำ ${fmt(d.minDeposit)}${maxTxt} บ.</span>`
   ].join('');
   return `<div class="card">
@@ -387,6 +457,7 @@ function card(d){
         <span class="num">${d.rateMin.toFixed(2)}</span><span class="pc">%</span>
         <span class="lbl">${rateLbl}</span>
       </div>
+      ${period}
     </div>
     <div class="body">
       ${tiers}
@@ -409,7 +480,8 @@ function getFilters(){
     notax:$('f_notax').checked,
     mobile:$('f_mobile').checked,
     anytime:$('f_anytime').checked,
-    assoc:$('f_assoc').checked
+    assoc:$('f_assoc').checked,
+    general:$('f_general').checked
   };
 }
 
@@ -423,10 +495,11 @@ function apply(){
       if(d.maxDeposit!==null && f.amount > d.maxDeposit) return false;
     }
     if(f.terms.length && !f.terms.some(t=>d.terms.includes(t))) return false;
-    if(f.notax && d.tax) return false;
+    if(f.notax && d.tax!==false) return false;
     if(f.mobile && !d.mobile) return false;
     if(f.anytime && !d.anytime) return false;
     if(f.assoc && !d.assoc) return false;
+    if(f.general && d.only) return false;
     return true;
   });
 
@@ -438,62 +511,102 @@ function apply(){
   });
 
   $('num').textContent=list.length;
-  $('cards').innerHTML = list.length
+  const box=$('cards');
+  box.className = list.length ? 'cards' : 'empty';
+  box.innerHTML = list.length
     ? list.map(card).join('')
-    : '';
-  if(!list.length){
-    $('cards').outerHTML='<div class="empty" id="cards"><div class="ic">🔎</div>ไม่พบโครงการที่ตรงกับเงื่อนไข<br>ลองปรับตัวกรองใหม่</div>';
-  }
+    : '<div class="ic">🔎</div>ไม่พบโครงการที่ตรงกับเงื่อนไข<br>ลองปรับตัวกรองใหม่';
 }
 
 /* ====== CALCULATOR ====== */
-let curProd=null;
+let curProd=null, curOpts=[];
 const SAVING_MONTHS=[3,6,12,24,36];
+// จำนวนวันต่อเดือนของแบบทยอยคืนต้น เริ่มจ่ายเดือน ธ.ค. คิดปีละ 365 วัน (ตรงกับเอกสารแนบ 1 ของประกาศ)
+const ANNUITY_DAYS=[31,31,28,31,30,31,30,31,31,30,31,30];
+const pc=r=>r.toFixed(2);
+const SUB={
+  recurring:'ฝากเท่ากันทุกเดือน 24 เดือน',
+  savings:'ดอกเบี้ยออมทรัพย์ คำนวณตามจำนวนเดือนที่ฝาก',
+  compound:'คิดแบบทบต้นรายเดือน',
+  fixed:'ฝากครบตามระยะเวลาที่กำหนด',
+  stepup:'ดอกเบี้ยขั้นบันได จ่ายดอกเบี้ยรายเดือน',
+  annuity:'ทยอยรับคืนต้นเงินพร้อมดอกเบี้ยทุกเดือน'
+};
+
+function termLabel(d,t){
+  if(t.steps) return `${t.m} เดือน • ขั้นบันได ${t.steps.map(s=>pc(s.r)).join(' → ')}%`;
+  let s=`${t.m} เดือน • ${pc(t.r)}% ต่อปี`;
+  if(d.calcType==='recurring') s+=' (ฝากรายเดือน)';
+  if(t.max) s+=` (ไม่เกิน ${fmt(t.max)} บ.)`;
+  return s;
+}
 
 function openCalc(d){
   curProd=d;
+  curOpts = d.calcType==='savings' ? SAVING_MONTHS.map(m=>({m,r:d.rates[0].r})) : d.rates;
   $('mName').textContent='🧮 '+d.name;
+  $('mSub').textContent=SUB[d.calcType];
+  $('lblTerm').textContent = d.calcType==='recurring' ? 'ระยะเวลาฝาก'
+    : d.calcType==='savings' ? 'ระยะเวลาที่ฝาก (เดือน)' : 'เลือกระยะเวลา / อัตราดอกเบี้ย';
+  $('lblAmt').textContent = d.calcType==='recurring' ? 'ยอดฝากต่อเดือน (บาท)'
+    : d.calcType==='annuity' ? 'จำนวนเงินฝาก (บาท) • แผนละ 1–10 ล้านบาท' : 'จำนวนเงินฝาก (บาท)';
   const sel=$('mTerm');
-  if(d.calcType==='recurring'){
-    $('lblTerm').textContent='ระยะเวลาฝาก';
-    sel.innerHTML=`<option value="24|2.65">24 เดือน • 2.65% ต่อปี (ฝากรายเดือน)</option>`;
-    sel.disabled=true;
-    $('lblAmt').textContent='ยอดฝากต่อเดือน (บาท)';
-    $('mSub').textContent='ฝากเท่ากันทุกเดือน 24 เดือน';
-  }else if(d.calcType==='savings'){
-    $('lblTerm').textContent='ระยะเวลาที่ฝาก (เดือน)';
-    sel.disabled=false;
-    sel.innerHTML=SAVING_MONTHS.map(m=>`<option value="${m}|${d.rates[0].r}">${m} เดือน • ${d.rates[0].r.toFixed(2)}% ต่อปี</option>`).join('');
-    $('lblAmt').textContent='จำนวนเงินฝาก (บาท)';
-    $('mSub').textContent='ดอกเบี้ยออมทรัพย์ คำนวณตามจำนวนเดือนที่ฝาก';
-  }else{
-    $('lblTerm').textContent='เลือกระยะเวลา / อัตราดอกเบี้ย';
-    sel.disabled=false;
-    sel.innerHTML=d.rates.map(t=>`<option value="${t.m}|${t.r}">${t.m} เดือน • ${t.r.toFixed(2)}% ต่อปี</option>`).join('');
-    $('lblAmt').textContent='จำนวนเงินฝาก (บาท)';
-    $('mSub').textContent = d.calcType==='compound' ? 'คิดแบบทบต้นรายเดือน' : 'เงินฝากประจำ';
-  }
-  $('mAmt').value = d.minDeposit>1 ? d.minDeposit : 10000;
+  sel.innerHTML=curOpts.map((t,i)=>`<option value="${i}">${termLabel(d,t)}</option>`).join('');
+  sel.disabled = d.calcType==='recurring';
+  $('mAmt').step = d.calcType==='annuity' ? 1000000 : 1000;
+  $('mAmt').value = Math.max(d.minDeposit, d.earnMin||0, 10000);
   $('overlay').classList.add('show');
+  $('overlay').querySelector('.mbody').scrollTop=0;
   calc();
 }
 
 function calc(){
   const d=curProd; if(!d) return;
-  const [m,r]=$('mTerm').value.split('|').map(Number);
+  const o=curOpts[+$('mTerm').value], m=o.m, r=o.r;
   const amt=+$('mAmt').value||0;
-  let principal, gross;
+
+  const noInterest = d.earnMin && amt<d.earnMin;
+  const warn=[];
+  if(amt>0){
+    if(noInterest) warn.push(`ต้องมีเงินในบัญชีอย่างน้อย ${fmt(d.earnMin)} บาท จึงจะได้รับดอกเบี้ย`);
+    else if(amt<d.minDeposit) warn.push(`ต่ำกว่าเงินฝากขั้นต่ำ ${fmt(d.minDeposit)} บาท`);
+    else if(d.calcType==='annuity' && amt%1e6) warn.push('โครงการนี้ฝากเป็นแผน แผนละ 1–10 ล้านบาท (เต็มจำนวนล้าน)');
+    if(o.max && amt>o.max) warn.push(`ระยะเวลา ${m} เดือน ฝากได้ไม่เกิน ${fmt(o.max)} บาท`);
+    else if(d.maxDeposit && amt>d.maxDeposit) warn.push(`เกินวงเงินฝากสูงสุด ${fmt(d.maxDeposit)} บาท`);
+  }
+
+  const base=noInterest?0:amt;             // ยอดที่นำมาคิดดอกเบี้ย
+  let principal=amt, gross=0, detail='';
 
   if(d.calcType==='recurring'){
-    const n=m; // 24
-    principal=amt*n;                       // เงินต้นรวมที่ฝากทั้งหมด
-    gross=amt*(r/100/12)*(n*(n+1)/2);      // ดอกเบี้ยสะสมแบบฝากรายเดือน
+    principal=amt*m;                       // เงินต้นรวมที่ฝากทั้งหมด
+    gross=amt*(r/100/12)*(m*(m+1)/2);      // ดอกเบี้ยสะสมแบบฝากรายเดือน
   }else if(d.calcType==='compound'){
-    principal=amt;
     gross=amt*Math.pow(1+r/100/12,m)-amt;  // ทบต้นรายเดือน
+  }else if(d.calcType==='stepup'){
+    let from=0;                            // ขั้นบันได: คิดทีละช่วงตามอัตราของช่วงนั้น
+    (o.steps||[{to:m,r}]).forEach(s=>{
+      const part=base*(s.r/100)*((s.to-from)/12);
+      gross+=part;
+      detail+=`<div class="rline"><span>เดือนที่ ${from+1}–${s.to} • ${pc(s.r)}%<small>รับดอกเบี้ย ≈ ${baht(base*s.r/100/12)} บ./เดือน</small></span><span class="v">${baht(part)} บ.</span></div>`;
+      from=s.to;
+    });
+  }else if(d.calcType==='annuity'){
+    const pm=Math.round(amt/m);            // ต้นเงินที่ทยอยคืนต่อเดือน (ปัดเป็นบาท)
+    let bal=amt, first=0, last=0, y3=0;
+    for(let k=0;k<m;k++){
+      const i=bal*(r/100)*ANNUITY_DAYS[k%12]/365;   // ดอกเบี้ยรายวันจากเงินฝากคงเหลือ
+      if(k===0) first=i;
+      if(k===m-1) last=i;
+      if(k<36) y3+=i;
+      gross+=i; bal-=pm;
+    }
+    detail=`<div class="rline"><span>รับคืนต้นเงินเดือนละ</span><span class="v">${baht(pm)} บ.</span></div>
+    <div class="rline"><span>รับรวมเดือนแรก<small>ต้นเงิน + ดอกเบี้ย ${baht(first)} บ.</small></span><span class="v">${baht(pm+first)} บ.</span></div>
+    <div class="rline"><span>รับรวมเดือนสุดท้าย<small>ต้นเงิน + ดอกเบี้ย ${baht(last)} บ.</small></span><span class="v">${baht(pm+last)} บ.</span></div>
+    <div class="rline"><span>ดอกเบี้ยรวม 3 ปีแรก</span><span class="v">${baht(y3)} บ.</span></div>`;
   }else{
-    principal=amt;
-    gross=amt*(r/100)*(m/12);              // ดอกเบี้ยแบบปกติ
+    gross=base*(r/100)*(m/12);             // ดอกเบี้ยแบบปกติ
   }
 
   const taxAmt=gross*(d.taxRate/100);
@@ -501,16 +614,21 @@ function calc(){
   const total=principal+net;
 
   const depLabel=d.calcType==='recurring'?'เงินต้นรวมที่ฝาก':'เงินต้น';
-  let html=`<div class="result">
+  const intLabel=detail?`ดอกเบี้ยรวมตลอด ${m} เดือน`:'ดอกเบี้ยที่ได้ (ก่อนภาษี)';
+  const taxNote=d.taxRate>0?'หักภาษี '+d.taxRate+'% แล้ว':d.tax===false?'ไม่หักภาษี':'ยังไม่รวมภาษี หากมี';
+  const reviewNote=d.review && m>d.review
+    ? `<br>* สหกรณ์พิจารณาอัตราดอกเบี้ยทุก ${d.review/12} ปี ตัวเลขหลังปีที่ ${d.review/12} คิดโดยสมมติว่าอัตราคงเดิม` : '';
+  let html=warn.map(w=>`<div class="rwarn">⚠️ ${w}</div>`).join('')+`<div class="result">
     <div class="rline"><span>${depLabel}</span><span class="v">${baht(principal)} บ.</span></div>
-    <div class="rline"><span>ดอกเบี้ยที่ได้ (ก่อนภาษี)</span><span class="v" style="color:var(--orange)">${baht(gross)} บ.</span></div>`;
+    ${detail}
+    <div class="rline"><span>${intLabel}</span><span class="v" style="color:var(--orange)">${baht(gross)} บ.</span></div>`;
   if(d.taxRate>0){
     html+=`<div class="rline"><span>หักภาษี ${d.taxRate}%</span><span class="v" style="color:var(--red)">- ${baht(taxAmt)} บ.</span></div>
     <div class="rline"><span>ดอกเบี้ยสุทธิ</span><span class="v" style="color:var(--green)">${baht(net)} บ.</span></div>`;
   }
   html+=`<div class="rline big"><span>รวมเงินที่ได้รับ</span><span>${baht(total)} บ.</span></div>
   </div>
-  <div class="rnote">* เป็นการประมาณการเบื้องต้น (${d.taxRate>0?'หักภาษี '+d.taxRate+'% แล้ว':'ไม่หักภาษี'}) ตัวเลขจริงขึ้นกับวิธีคิดดอกเบี้ยและวันที่ฝากจริงของสหกรณ์</div>`;
+  <div class="rnote">* เป็นการประมาณการเบื้องต้น (${taxNote}) ตัวเลขจริงขึ้นกับวิธีคิดดอกเบี้ยและวันที่ฝากจริงของสหกรณ์${reviewNote}</div>`;
   $('mResult').innerHTML=html;
 }
 
