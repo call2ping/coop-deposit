@@ -79,6 +79,14 @@
     display:inline-block;margin-top:10px;font-size:12px;font-weight:600;
     color:#8a5a00;background:#fff8e1;border:1px solid #ffe7a3;padding:3px 9px;border-radius:6px;
   }
+  /* ป้ายสถานะช่วงเวลาโครงการ */
+  .flags{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:8px}
+  .flag{font-size:11px;font-weight:700;padding:3px 10px;border-radius:999px;white-space:nowrap}
+  .flag.upcoming{background:#ede9fe;color:#5b21b6;border:1px solid #ddd6fe}
+  .flag.new{background:#e8f5e9;color:#1b5e20;border:1px solid #c8e6c9}
+  .flag.soon{background:#fff3e0;color:#c2410c;border:1px solid #ffe0b2}
+  .flag.over{background:#eceff1;color:#546e7a;border:1px solid #cfd8dc}
+  .card.expired{opacity:.6}
   .body{padding:14px 16px;flex:1}
   .tiers{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
   .tier{background:var(--blue-l);color:var(--blue-d);font-size:12px;font-weight:600;padding:3px 9px;border-radius:20px}
@@ -185,6 +193,7 @@
   <main>
     <div class="count">
       <select class="sort" id="sort">
+        <option value="newest" selected>เรียง: โครงการใหม่ล่าสุด</option>
         <option value="rate">เรียง: ดอกเบี้ยสูงสุด</option>
         <option value="min">เรียง: เงินฝากขั้นต่ำน้อยสุด</option>
         <option value="name">เรียง: ชื่อโครงการ</option>
@@ -347,6 +356,7 @@ const DATA = [
     tax:false, mobile:false, anytime:false, assoc:true,
     tiers:["5ด.2.05%","10ด.2.35%","15ด.2.55%","20ด.2.80%"],
     period:"1 ต.ค. – 30 ธ.ค. 2569 (ขยายเวลา)",
+    start:"2026-10-01", end:"2026-12-30",
     pdf:"23.ประกาศ เรื่อง โครงการเงินฝากออมทรัพย์ แบบกำหนดระยะเวลา(ณ วันที่ 1 ต.ค.2569).pdf",
     calcType:"fixed", taxRate:0,
     rates:[{m:5,r:2.05},{m:10,r:2.35},{m:15,r:2.55},{m:20,r:2.80}],
@@ -365,6 +375,7 @@ const DATA = [
     only:"เฉพาะนิติบุคคล",
     tiers:["5ด.2.05%","10ด.2.35%","15ด.2.55%","20ด.2.80%"],
     period:"1 ต.ค. – 30 ธ.ค. 2569",
+    start:"2026-10-01", end:"2026-12-30",
     pdf:"24.ประกาศ เรื่อง โครงการเงินฝากออมทรัพย์สำหรับนิติบุคคล แบบกำหนดระยะเวลา(ณ วันที่ 1 ต.ค.2569).pdf",
     calcType:"fixed", taxRate:0,
     rates:[{m:5,r:2.05},{m:10,r:2.35},{m:15,r:2.55},{m:20,r:2.80}],
@@ -383,6 +394,7 @@ const DATA = [
     only:"เฉพาะผู้เกษียณ/พ้นสภาพ ปี 2569",
     tiers:["12ด. 3.00%","24ด. 3.00→3.25%","36ด. 3.00→3.25→3.50%","60ด. 3.00→3.25→3.50%","84ด. 3.50%"],
     period:"1 ต.ค. – 30 ธ.ค. 2569",
+    start:"2026-10-01", end:"2026-12-30",
     pdf:"28_2569 ประกาศ เรื่อง โครงการรับฝากเงินออมทรัพย์เกษียณเสริมสุข ปี 2569.pdf",
     calcType:"stepup", taxRate:0, review:36,
     rates:[
@@ -409,6 +421,7 @@ const DATA = [
     only:"เฉพาะผู้เกษียณ/พ้นสภาพ ปี 2569",
     tiers:["120 เดือน (10 ปี)","180 เดือน (15 ปี)"],
     period:"2 พ.ย. – 30 ธ.ค. 2569",
+    start:"2026-11-02", end:"2026-12-30",
     pdf:"29.ประกาศ เรื่อง โครงการรับฝากเงินออมทรัพย์บำนาญผู้เกษียณ.pdf",
     calcType:"annuity", taxRate:0, review:36,
     rates:[{m:120,r:3.25},{m:180,r:3.25}],
@@ -429,6 +442,34 @@ const fmt=n=>n.toLocaleString('th-TH');
 const baht=n=>n.toLocaleString('th-TH',{minimumFractionDigits:2,maximumFractionDigits:2});
 DATA.forEach((d,i)=>d._i=i);
 
+/* ====== ช่วงเวลาโครงการ ======
+   start/end = วันที่ ค.ศ. จากข้อ "มีผลบังคับใช้ตั้งแต่…ถึงวันที่…" ในประกาศต้นฉบับ
+   โครงการที่ไม่มี start = เงินฝากประจำของสหกรณ์ ไม่มีกำหนดสิ้นสุด
+   today อ่านใหม่ทุกครั้งที่เปิดหน้า จากนาฬิกาเครื่องผู้เปิดดู */
+const DAY=86400000, NEW_DAYS=30, SOON_DAYS=30;
+const today=new Date(); today.setHours(0,0,0,0);
+const toDate=s=>{const[y,m,d]=s.split('-').map(Number);return new Date(y,m-1,d);};
+
+function period(d){
+  if(!d.start) return {};
+  const sinceStart=Math.round((today-toDate(d.start))/DAY);   // ผ่านวันเริ่มมากี่วัน (ติดลบ = ยังไม่เริ่ม)
+  const left=Math.round((toDate(d.end)-today)/DAY);           // เหลืออีกกี่วันถึงวันสุดท้าย
+  return {
+    upcoming: sinceStart<0,                                   // ยังไม่ถึงวันเริ่มโครงการ
+    isNew:    sinceStart>=0 && sinceStart<=NEW_DAYS && left>=0,
+    soon:     sinceStart>=0 && left>=0 && left<=SOON_DAYS,
+    expired:  left<0,
+    left, sinceStart
+  };
+}
+
+function flags(p){
+  return (p.upcoming ? '<span class="flag upcoming">incoming</span>' : '')
+       + (p.isNew    ? '<span class="flag new">✨ NEW</span>' : '')
+       + (p.soon     ? `<span class="flag soon">⏳ ${p.left ? 'เหลือ '+p.left+' วัน' : 'วันสุดท้าย'}</span>` : '')
+       + (p.expired  ? '<span class="flag over">หมดเขตแล้ว</span>' : '');
+}
+
 /* ตัวเลือกระยะเวลาและช่วงดอกเบี้ยของตัวกรอง สร้างจากข้อมูลโครงการ */
 $('terms').innerHTML=[...new Set(DATA.flatMap(d=>d.terms))].sort((a,b)=>a-b)
   .map(t=>`<label class="chk"><input type="checkbox" value="${t}">${t||'ไม่กำหนด'}</label>`).join('');
@@ -441,7 +482,10 @@ function card(d){
     ? `<div class="tiers">${d.tiers.map(t=>`<span class="tier">${t}</span>`).join('')}</div>` : '';
   const maxTxt = d.maxDeposit ? ` – ${fmt(d.maxDeposit)}` : '';
   const rateLbl = d.rateMin===d.rateMax ? 'ต่อปี' : `สูงสุด ${d.rateMax.toFixed(2)}% ต่อปี`;
-  const period = d.period ? `<div class="period">🗓️ เปิดรับฝาก ${d.period}</div>` : '';
+  const periodTxt = d.period ? `<div class="period">🗓️ เปิดรับฝาก ${d.period}</div>` : '';
+  const p = period(d);
+  const fl = flags(p);
+  const flagRow = fl ? `<div class="flags">${fl}</div>` : '';
   // tax/mobile เป็น null = ประกาศไม่ได้ระบุ จึงไม่แสดงป้าย
   const pills = [
     d.tax===true ? `<span class="pill tax">เสียภาษี 15%</span>` : d.tax===false ? `<span class="pill ok">ไม่เสียภาษี</span>` : '',
@@ -450,14 +494,15 @@ function card(d){
       : d.assoc ? `<span class="pill ok">สมทบฝากได้</span>` : `<span class="pill no">สมทบฝากไม่ได้</span>`,
     `<span class="pill min">ขั้นต่ำ ${fmt(d.minDeposit)}${maxTxt} บ.</span>`
   ].join('');
-  return `<div class="card">
+  return `<div class="card${p.expired?' expired':''}">
     <div class="top">
+      ${flagRow}
       <div class="name">${d.name}</div>
       <div class="rate">
         <span class="num">${d.rateMin.toFixed(2)}</span><span class="pc">%</span>
         <span class="lbl">${rateLbl}</span>
       </div>
-      ${period}
+      ${periodTxt}
     </div>
     <div class="body">
       ${tiers}
@@ -505,6 +550,11 @@ function apply(){
 
   const s=$('sort').value;
   list.sort((a,b)=>{
+    if(s==='newest'){ // วันเริ่มใหม่สุดก่อน → ไม่มีกำหนดเวลา → หมดเขตแล้วไว้ล่างสุด
+      const ex=(period(a).expired?1:0)-(period(b).expired?1:0); if(ex) return ex;
+      const sa=a.start||'', sb=b.start||'';
+      return sa!==sb ? sb.localeCompare(sa) : b.rateMax-a.rateMax;
+    }
     if(s==='rate') return b.rateMax-a.rateMax;
     if(s==='min') return a.minDeposit-b.minDeposit;
     return a.name.localeCompare(b.name,'th');
@@ -648,7 +698,7 @@ $('mAmt').addEventListener('input',calc);
 document.addEventListener('input',e=>{ if(e.target.closest('.modal'))return; apply(); });
 document.addEventListener('change',e=>{ if(e.target.closest('.modal'))return; apply(); });
 $('reset').addEventListener('click',()=>{
-  $('rate').value=0; $('amount').value=''; $('sort').value='rate';
+  $('rate').value=0; $('amount').value=''; $('sort').value='newest';
   document.querySelectorAll('.panel input[type=checkbox]').forEach(c=>c.checked=false);
   apply();
 });
