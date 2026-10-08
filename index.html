@@ -464,7 +464,7 @@ function period(d){
 }
 
 function flags(p){
-  return (p.upcoming ? '<span class="flag upcoming">incoming</span>' : '')
+  return (p.upcoming ? '<span class="flag upcoming">🔜 incoming</span>' : '')
        + (p.isNew    ? '<span class="flag new">✨ NEW</span>' : '')
        + (p.soon     ? `<span class="flag soon">⏳ ${p.left ? 'เหลือ '+p.left+' วัน' : 'วันสุดท้าย'}</span>` : '')
        + (p.expired  ? '<span class="flag over">หมดเขตแล้ว</span>' : '');
